@@ -1,0 +1,116 @@
+#!/bin/bash
+
+PATH=$PATH
+
+FLAG_CAT=0
+FLAG_GREP=0
+FLAG_ECHO=0
+FLAG_CALL=0
+FLAG_P=0
+FLAG_m=0
+FLAG_s=0
+
+# echoファンクション
+function imasecho (){
+    if [ $FLAG_P -eq "0" ] && [ $FLAG_m -eq "0" ] ; then
+        P_NAME="プロデューサー"
+	MESSAGE="アイマス"
+    elif [ $FLAG_P -eq "0" ]  && [ $FLAG_m -eq "1" ] ; then
+        P_NAME="プロデューサー"
+    elif [ $FLAG_P -eq "1" ]  && [ $FLAG_m -eq "0" ] ; then
+	MESSAGE="アイマス"
+    fi
+
+    echo "$P_NAME"'さん！ '"$MESSAGE"'ですよ！'"$MESSAGE"'！'
+
+}
+
+## USAGE ###
+usage_exit() {
+        echo "Usage: $0 item  [-P] [-m] [-s]" 1>&2
+        echo " item list----------------------"
+        echo "    cat  : Disp All idol"
+        echo "    grep : idol grep"
+        echo "    echo : Ano Serifu"
+        echo "    call : call and respons messages"
+ #       echo "grep -f 'filename' : idol grep"
+ #       echo "echo -P 'producer' -m  'message' : "
+ #       echo "call -s 'song': "
+        exit 1
+}
+
+# First ARG 
+echo "First ARG--------------------------------------------"
+    case $1 in
+        cat)    readonly FLAG_CAT=1
+		echo "CAT=" ${FLAG_CAT}
+		shift
+            ;;
+        grep)   readonly FLAG_GREP=1 
+		echo "GREP=" ${FLAG_GREP}
+		shift
+            ;;
+        echo)   readonly FLAG_ECHO=1
+		echo "ECHO=" ${FLAG_ECHO}
+		shift
+            ;;
+        call)   readonly FLAG_CALL=1
+		echo "CALL=" ${FLAG_CALL}
+		shift
+            ;;
+        \?) usage_exit
+            ;;
+    esac
+
+## 2nd or later 
+echo "2nd ARG later----------------------------------------"
+while getopts :P:m:c:h OPT
+do
+    case $OPT in
+        P)  readonly FLAG_P=1
+            readonly P_NAME=$OPTARG
+		echo "P=" ${FLAG_P}
+		echo "P_NAME=" ${P_NAME}
+            ;;
+        m)  readonly FLAG_m=1 
+            readonly MESSAGE=$OPTARG
+		echo "m=" ${FLAG_m}
+		echo "MESSAGE=" ${MESSAGE}
+            ;;
+        s) readonly FLAG_s=1
+              readonly SONGS=$OPTARG
+		echo "SONGS=" ${FLAG_SONGS}
+ 	    ;;
+        \?) usage_exit
+            ;;
+    esac
+done
+
+
+
+echo ""
+echo ""
+echo ""
+echo "[Main]-----------------------------------------------------"
+echo ""
+
+    if [ $FLAG_CAT -eq "1" ] ; then
+	imascat
+
+    elif [ $FLAG_GREP -eq "1" ] ; then
+	imasgrep
+
+    elif [ $FLAG_ECHO -eq "1" ] ; then 
+	imasecho
+
+    elif [ $FLAG_CALL == "1" ] ; then
+	imascall
+
+    else 
+	usage_exit
+    fi
+
+
+echo ""
+echo "[END Program]----------------------------------------------"
+echo ""
