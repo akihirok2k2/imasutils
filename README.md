@@ -4,7 +4,7 @@ A reference for 765PRO all stars (include million stars)
 
 ## Installation
     git clone https://github.com/akihirok2k2/imasutils.git
-    ln -s [Your Dir PATH]/bin/imas /usr/local/bin/
+    ln -s [YOUR-INSTALL-DIR]/bin/imas /usr/local/bin/
 
 ## Usage
 ### imas list
@@ -73,3 +73,6 @@ Haruka Amami's That serif!
 
 
 ## Remove
+    $ rm -rf /usr/local/share/rubimas
+    $ rm -rf [YOUR-INSTALL-DIR]/imasutils
+    $ unlink /usr/local/bin/ima
