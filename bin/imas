@@ -1,16 +1,24 @@
 #!/bin/bash
 
 PATH=$PATH
+SHARE_PATH="/usr/local/share/"
+RBMAS_PATH="/usr/local/share//rubimas-master"
+IDOL_YML="/usr/local/share/rubimas-master/config/idols.yml"
 
-FLAG_CAT=0
-FLAG_GREP=0
-FLAG_ECHO=0
-FLAG_CALL=0
-FLAG_P=0
-FLAG_m=0
-FLAG_s=0
+## The First File Check "rubimas"
+function firstdownload(){
+        # wget -q : 表示抑制
+	echo "GET = >" $RBMAS_PATH
+	wget -q  https://github.com/imas/rubimas/archive/master.zip -P /tmp
+        # unzip -q : 表示抑制  -d :出力ディレクトリ指定
+	unzip -q -d /usr/local/share/ /tmp/master.zip
+	test -d $RBMAS_PATH || exti 1 
+	echo ""
+}
 
-# echoファンクション
+
+
+# echo function
 function imasecho (){
     if [ $FLAG_P -eq "0" ] && [ $FLAG_m -eq "0" ] ; then
         P_NAME="プロデューサー"
@@ -22,64 +30,90 @@ function imasecho (){
     fi
 
     echo "$P_NAME"'さん！ '"$MESSAGE"'ですよ！'"$MESSAGE"'！'
-
 }
+
+
+function imaslist(){
+	cat idols.yml | grep -E idol_id\|family:\|given: | tr -d "\""  |tr -d " "| awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}END{for(j = 1; j <= i; j++){print a[j],b[j]}}'
+}
+
 
 ## USAGE ###
 usage_exit() {
         echo "Usage: $0 item  [-P] [-m] [-s]" 1>&2
         echo " item list----------------------"
-        echo "    cat  : Disp All idol"
-        echo "    grep : idol grep"
+        echo "    cat  : [DONT]"
+        echo "    grep : [DONT]idol grep"
         echo "    echo : Ano Serifu"
-        echo "    call : call and respons messages"
+        echo "    call : [DONT]call and respons messages"
+        echo "    list : call and respons messages"
  #       echo "grep -f 'filename' : idol grep"
  #       echo "echo -P 'producer' -m  'message' : "
  #       echo "call -s 'song': "
         exit 1
 }
 
+
 # First ARG 
-echo "First ARG--------------------------------------------"
+FLAG_CAT=0
+FLAG_GREP=0
+FLAG_ECHO=0
+FLAG_CALL=0
+FLAG_LIST=0
+
+#echo "First ARG--------------------------------------------" # debug
     case $1 in
         cat)    readonly FLAG_CAT=1
-		echo "CAT=" ${FLAG_CAT}
+#		echo "  CAT=" ${FLAG_CAT} # debug
 		shift
             ;;
         grep)   readonly FLAG_GREP=1 
-		echo "GREP=" ${FLAG_GREP}
+#		echo "  GREP=" ${FLAG_GREP} # debug
 		shift
             ;;
         echo)   readonly FLAG_ECHO=1
-		echo "ECHO=" ${FLAG_ECHO}
+#		echo "  ECHO=" ${FLAG_ECHO} # debug
 		shift
             ;;
         call)   readonly FLAG_CALL=1
-		echo "CALL=" ${FLAG_CALL}
+#		echo "  CALL=" ${FLAG_CALL} # debug
 		shift
             ;;
+        list)   readonly FLAG_LIST=1
+#		echo "  LIST=" ${FLAG_CALL} # debug
+		shift
+	   ;;
         \?) usage_exit
             ;;
     esac
 
+
+
 ## 2nd or later 
-echo "2nd ARG later----------------------------------------"
+FLAG_P=0
+FLAG_m=0
+FLAG_s=0
+#echo "2nd ARG later----------------------------------------" # debug
 while getopts :P:m:c:h OPT
 do
     case $OPT in
         P)  readonly FLAG_P=1
             readonly P_NAME=$OPTARG
-		echo "P=" ${FLAG_P}
-		echo "P_NAME=" ${P_NAME}
+#		echo "  P=" ${FLAG_P}  # debug  
+#		echo "  P_NAME=" ${P_NAME} # debug
             ;;
         m)  readonly FLAG_m=1 
             readonly MESSAGE=$OPTARG
-		echo "m=" ${FLAG_m}
-		echo "MESSAGE=" ${MESSAGE}
+#		echo "  m=" ${FLAG_m} # debug
+#		echo "  MESSAGE=" ${MESSAGE} # debug
             ;;
         s) readonly FLAG_s=1
               readonly SONGS=$OPTARG
-		echo "SONGS=" ${FLAG_SONGS}
+#		echo "  SONGS=" ${FLAG_SONGS} # debug
+ 	    ;;
+        n) readonly FLAG_n=1
+              readonly NEME=$OPTARG
+#		echo "  NAME=" ${NAME} # debug
  	    ;;
         \?) usage_exit
             ;;
@@ -88,11 +122,15 @@ done
 
 
 
-echo ""
-echo ""
-echo ""
-echo "[Main]-----------------------------------------------------"
-echo ""
+#echo ""
+#echo ""
+#echo ""
+#echo "[Main]-----------------------------------------------------"
+#echo ""
+
+
+# Check rubimas dir 
+test -d $RBMAS_PATH || firstdownload
 
     if [ $FLAG_CAT -eq "1" ] ; then
 	imascat
@@ -106,11 +144,14 @@ echo ""
     elif [ $FLAG_CALL == "1" ] ; then
 	imascall
 
+    elif [ $FLAG_LIST == "1" ] ; then
+	cat $IDOL_YML | grep -E idol_id\|family:\|given: | tr -d "\""  |tr -d " "| awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}END{for(j = 1; j <= i; j++){print a[j],b[j]}}'
+	#imaslist
     else 
 	usage_exit
     fi
 
 
-echo ""
-echo "[END Program]----------------------------------------------"
-echo ""
+#echo ""
+#echo "[END Program]----------------------------------------------"
+#echo ""
