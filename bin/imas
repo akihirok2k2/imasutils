@@ -1,21 +1,92 @@
 #!/bin/bash
+#memo
+## sed -i -e "s/^\(.*debug\)/#\1/g" imas 
 
 PATH=$PATH
-SHARE_PATH="/usr/local/share/"
-RBMAS_PATH="/usr/local/share//rubimas-master"
-IDOL_YML="/usr/local/share/rubimas-master/config/idols.yml"
+SHARE_PATH="/usr/local/share"
+RBMAS_PATH="$SHARE_PATH/rubimas-master"
+IDOL_YML="$RBMAS_PATH/config/idols.yml"
 
-## The First File Check "rubimas"
+function parse_yaml () {
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s=\"%s\"\n", vn, $2, $3);
+      }
+   }'
+   return 0
+}
+
+
+## File Check "rubimas"   Download
 function firstdownload(){
-        # wget -q : 表示抑制
 	echo "GET = >" $RBMAS_PATH
-	wget -q  https://github.com/imas/rubimas/archive/master.zip -P /tmp
-        # unzip -q : 表示抑制  -d :出力ディレクトリ指定
-	unzip -q -d /usr/local/share/ /tmp/master.zip
+	wget -q  https://github.com/imas/rubimas/archive/master.zip -P /tmp  # wget -q : 表示抑制
+	unzip -q -d /usr/local/share/ /tmp/master.zip                        # unzip -q : 表示抑制  -d :出力ディレクトリ指定
 	test -d $RBMAS_PATH || exti 1 
 	echo ""
 }
 
+
+function imascat(){
+:
+}
+
+function imasgrep(){
+
+   ## idol_ymlから直接情報を取得し、idolの総数を取得
+    GIRLS_ALL_NUM=$(cat $IDOL_YML | grep -E idol_id | tr -d "\""  |tr -d " "| wc -l )
+    GIRLS_ALL_NUM=$(expr $GIRLS_ALL_NUM - 1)
+
+   ## idol_id毎にフルネームを配列に入れていく
+    GIRLS_NAME_LIST=($(cat $IDOL_YML | grep -E idol_id\|family:\|given:\|aka: | tr -d "\""  |tr -d " "| \
+    awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}$1=="aka"{a[i]=$2}END\
+               {for(j = 1; j <= i; j++){printf ("%s%s ",a[j],b[j])}}'))
+
+    cp  $FILE $FILE.swp
+
+    if [ $FLAG_n -eq "1" ] ;then
+
+        ## 対象アイドルのidol_id を取得する
+        for i in `seq 0 $GIRLS_ALL_NUM`;do
+#            j=$(expr $i + 1); echo "idol_id:"$j"=" ${GIRLS_NAME_LIST[$i]}  ; j=$(expr $i - 1) #debug
+#            echo "NAME =" ${NAME} #debug
+                if [ "${GIRLS_NAME_LIST[$i]}" = "${NAME}" ] ; then
+                    j=$(expr $i + 1)
+                    ## YMLをパース処理したものを利用して、対象アイドルの情報取得
+                    NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
+                    COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
+
+		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE.swp
+                fi
+        done
+
+    else
+        for i in `seq 0 $GIRLS_ALL_NUM`;do
+#            j=$(expr $i + 1); echo "idol_id:"$j"=" ${GIRLS_NAME_LIST[$i]}  ; j=$(expr $i - 1) #debug
+                   #j=$(expr $i + 1)
+                    ## YMLをパース処理したものを利用して、対象アイドルの情報取得
+                    #NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
+                    #COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
+
+                    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE.swp
+        done  
+    fi
+   
+  # Defalt Output 
+    while read -r line ;do  # -r エスケープを読み込みために必要
+        echo -e ""$line""
+    done < $FILE.swp
+
+rm -f $FILE.swp
+
+}
 
 
 # echo function
@@ -32,21 +103,58 @@ function imasecho (){
     echo "$P_NAME"'さん！ '"$MESSAGE"'ですよ！'"$MESSAGE"'！'
 }
 
+function imascall(){
+:
+}
 
-function imaslist(){
-	cat idols.yml | grep -E idol_id\|family:\|given: | tr -d "\""  |tr -d " "| awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}END{for(j = 1; j <= i; j++){print a[j],b[j]}}'
+
+
+function imasgirls(){
+    if [ $FLAG_n -eq "1" ] ;then
+
+       ## idol_ymlから直接情報を取得し、idolの総数を取得
+	GIRLS_ALL_NUM=$(cat $IDOL_YML | grep -E idol_id | tr -d "\""  |tr -d " "| wc -l )
+	GIRLS_ALL_NUM=$(expr $GIRLS_ALL_NUM - 1)
+
+       ## idol_id毎にフルネームを配列に入れていく
+	GIRLS_NAME_LIST=($(cat $IDOL_YML | grep -E idol_id\|family:\|given:\|aka: | tr -d "\""  |tr -d " "| \
+        awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}$1=="aka"{a[i]=$2}END\
+                   {for(j = 1; j <= i; j++){printf ("%s%s ",a[j],b[j])}}'))
+
+#        echo "idol_num" $GIRLS_ALL_NUM #debug
+
+        ## 対象アイドルのidol_id を取得する
+        for i in `seq 0 $GIRLS_ALL_NUM`;do 
+##            j=$(expr $i + 1); echo "idol_id:"$j"=" ${GIRLS_NAME_LIST[$i]}  ; j=$(expr $i - 1) #debug
+##            echo "NAME =" ${NAME} #debug
+        	if [ "${GIRLS_NAME_LIST[$i]}" = "${NAME}" ] ; then
+		    i=$(expr $i + 1)
+            	    ## YMLをパース処理したものを利用して、対象アイドルの情報取得
+        	    NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$i\" |cut -d"_" -f1)
+#                    echo "NAME_ID=""${NAME_ID}" #debug
+                 # 出力形式は要修正箇所
+        	    parse_yaml $IDOL_YML  |grep ${NAME_ID} 
+                    break
+		fi
+        done    
+
+    else
+	cat $IDOL_YML | grep -E idol_id\|family:\|given:\|aka: | tr -d "\""  |tr -d " "| \
+            awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}$1=="aka"{a[i]=$2}END\
+                       {for(j = 1; j <= i; j++){printf("%s%s\n",a[j],b[j])}}'
+    fi
 }
 
 
 ## USAGE ###
 usage_exit() {
-        echo "Usage: $0 item  [-P] [-m] [-s]" 1>&2
+        echo "Usage: $0 item  [-P] [-m] [-s] [-n] " 1>&2
         echo " item list----------------------"
-        echo "    cat  : [DONT]"
-        echo "    grep : [DONT]idol grep"
-        echo "    echo : Ano Serifu"
-        echo "    call : [DONT]call and respons messages"
-        echo "    list : call and respons messages"
+        echo "    cat            : [DONT]"
+        echo "    grep [-n]      : [DONT]idol grep"
+        echo "    echo [-P] [-m] : Ano Serifu"
+        echo "    call           : [DONT]call and respons messages"
+        echo "    girls [-n]     : call and respons messages"
  #       echo "grep -f 'filename' : idol grep"
  #       echo "echo -P 'producer' -m  'message' : "
  #       echo "call -s 'song': "
@@ -59,7 +167,7 @@ FLAG_CAT=0
 FLAG_GREP=0
 FLAG_ECHO=0
 FLAG_CALL=0
-FLAG_LIST=0
+FLAG_GIRLS=0
 
 #echo "First ARG--------------------------------------------" # debug
     case $1 in
@@ -79,8 +187,8 @@ FLAG_LIST=0
 #		echo "  CALL=" ${FLAG_CALL} # debug
 		shift
             ;;
-        list)   readonly FLAG_LIST=1
-#		echo "  LIST=" ${FLAG_CALL} # debug
+        girls)   readonly FLAG_GIRLS=1
+#		echo "  GIRLS=" ${FLAG_CALL} # debug
 		shift
 	   ;;
         \?) usage_exit
@@ -93,9 +201,12 @@ FLAG_LIST=0
 FLAG_P=0
 FLAG_m=0
 FLAG_s=0
+FLAG_n=0
+FLAG_f=0
 #echo "2nd ARG later----------------------------------------" # debug
-while getopts :P:m:c:h OPT
+while getopts :P:m:c:n:f::h OPT
 do
+# echo "OPT="$OPT # debug
     case $OPT in
         P)  readonly FLAG_P=1
             readonly P_NAME=$OPTARG
@@ -112,8 +223,12 @@ do
 #		echo "  SONGS=" ${FLAG_SONGS} # debug
  	    ;;
         n) readonly FLAG_n=1
-              readonly NEME=$OPTARG
+              readonly NAME=$OPTARG
 #		echo "  NAME=" ${NAME} # debug
+ 	    ;;
+        f) readonly FLAG_f=1
+              readonly FILE=$OPTARG
+#		echo "  FILE=" ${FILE} # debug
  	    ;;
         \?) usage_exit
             ;;
@@ -122,18 +237,20 @@ done
 
 
 
-#echo ""
-#echo ""
-#echo ""
-#echo "[Main]-----------------------------------------------------"
-#echo ""
+#echo "" # debug
+#echo "" # debug
+#echo "" # debug
+#echo "[Main]-----------------------------------------------------" # debug
+#echo "" # debug
+
 
 
 # Check rubimas dir 
 test -d $RBMAS_PATH || firstdownload
 
     if [ $FLAG_CAT -eq "1" ] ; then
-	imascat
+	#imascat
+        echo "Do not Release"
 
     elif [ $FLAG_GREP -eq "1" ] ; then
 	imasgrep
@@ -142,16 +259,18 @@ test -d $RBMAS_PATH || firstdownload
 	imasecho
 
     elif [ $FLAG_CALL == "1" ] ; then
-	imascall
+	#imascall
+        echo "Do not Release"
 
-    elif [ $FLAG_LIST == "1" ] ; then
-	cat $IDOL_YML | grep -E idol_id\|family:\|given: | tr -d "\""  |tr -d " "| awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}END{for(j = 1; j <= i; j++){print a[j],b[j]}}'
-	#imaslist
+    elif [ $FLAG_GIRLS == "1" ] ; then
+	#cat $IDOL_YML | grep -E idol_id\|family:\|given: | tr -d "\""  |tr -d " "| awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}END{for(j = 1; j <= i; j++){print a[j],b[j]}}'
+	imasgirls
+
     else 
 	usage_exit
     fi
 
 
-#echo ""
-#echo "[END Program]----------------------------------------------"
-#echo ""
+#echo "" # debug
+#echo "[END Program]----------------------------------------------" # debug
+#echo "" # debug
