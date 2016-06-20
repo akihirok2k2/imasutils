@@ -73,8 +73,13 @@ Haruka Amami's That serif!
 
 
 
-## imas grep
-  $ imas grep 
+### imas grep
+    $imas grep -f [FILENAME]
+    Become red when there is an idle name
+
+    $ imas grep -f [FILENAME] -n [IDOLNAME]
+    Become red when there is The idle name
+
 
 
 ## Remove
