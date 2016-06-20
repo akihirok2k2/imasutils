@@ -72,6 +72,11 @@ Haruka Amami's That serif!
     あきひろさん！ 仕事ですよ！仕事！
 
 
+
+## imas grep
+  $ imas grep 
+
+
 ## Remove
     $ rm -rf /usr/local/share/rubimas
     $ rm -rf [YOUR-INSTALL-DIR]/imasutils

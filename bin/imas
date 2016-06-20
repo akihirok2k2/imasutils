@@ -48,8 +48,12 @@ function imasgrep(){
     GIRLS_NAME_LIST=($(cat $IDOL_YML | grep -E idol_id\|family:\|given:\|aka: | tr -d "\""  |tr -d " "| \
     awk -F":" '$1=="idol_id"{i=$2}$1=="family"{a[i]=$2}$1=="given"{b[i]=$2}$1=="aka"{a[i]=$2}END\
                {for(j = 1; j <= i; j++){printf ("%s%s ",a[j],b[j])}}'))
-
-    cp  $FILE $FILE.swp
+    
+    TMP_DIR=$(mktemp -d)
+    FILE_NAME=${FILE##*/}
+ #   echo "FILE_NAME" $FILE_NAME  # debug
+    cp  $FILE $TMP_DIR/$FILE_NAME.swp
+    cd $TMP_DIR
 
     if [ $FLAG_n -eq "1" ] ;then
 
@@ -63,7 +67,7 @@ function imasgrep(){
                     NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
                     COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
 
-		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE.swp
+		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
                 fi
         done
 
@@ -75,16 +79,16 @@ function imasgrep(){
                     #NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
                     #COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
 
-                    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE.swp
+                    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
         done  
     fi
    
   # Defalt Output 
     while read -r line ;do  # -r エスケープを読み込みために必要
         echo -e ""$line""
-    done < $FILE.swp
+    done < $FILE_NAME.swp
 
-rm -f $FILE.swp
+rm -rf $TMP_DIR
 
 }
 
@@ -253,6 +257,8 @@ test -d $RBMAS_PATH || firstdownload
         echo "Do not Release"
 
     elif [ $FLAG_GREP -eq "1" ] ; then
+       [ -f ${FILE} ] || echo "Not Found " $FILE 
+       [ -f ${FILE} ] || exit 1
 	imasgrep
 
     elif [ $FLAG_ECHO -eq "1" ] ; then 
