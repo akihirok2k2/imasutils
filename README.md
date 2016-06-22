@@ -74,12 +74,15 @@ Haruka Amami's That serif!
 
 
 ### imas grep
-    $imas grep -f [FILENAME]
-    Become red when there is an idle name
+    $imas grep [-f FILENAME]
+    Become green when there is an idle name
 
-    $ imas grep -f [FILENAME] -n [IDOLNAME]
-    Become red when there is The idle name
+    $ imas grep [-f FILENAME] [ -n IDOLNAME]
+    Become green when there is The idle name
 
+    $ echo "STRINGS" | imas grep [-f FILENAME2] [-n IDOLNAME]
+    Become green when there is The idle name. 
+    standerd-input STRINGS  add to -f option to FILE
 
 
 ## Remove

@@ -58,7 +58,7 @@ function imasgrep(){
 	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
 	    cat - >> $TMP_DIR/$FILE_NAME.swp
 	elif [ -p /dev/stdin ] && [ $FLAG_f -eq "0" ] ;then   # 標準出力のみ
-	    cat - >> $TMP_DIR/$FILE_NAME.swp
+	    cat - > $TMP_DIR/$FILE_NAME.swp
 	#elif [ -p /dev/stdin ] && [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
 	elif [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
 	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
@@ -167,10 +167,10 @@ usage_exit() {
         echo "Usage: $0 ITEM  [OPTION] " 1>&2
         echo " ITEM list----------------------"
         echo "    cat                            : [DONT]"
-        echo "    grep [-n PATERN] [-f PATERN]   : [DONT]idol grep"
+        echo "    grep [-n PATERN] [-f PATERN]   : Emphasize Idol"
         echo "    echo [-P PATERN] [-m PATERN]   : Ano Serifu"
         echo "    call                           : [DONT]call and respons messages"
-        echo "    girls [-n PATERN]              : call and respons messages"
+        echo "    girls [-n PATERN]              : 765OPRO all stars"
  #       echo "grep -f 'filename' : idol grep"
  #       echo "echo -P 'producer' -m  'message' : "
  #       echo "call -s 'song': "
