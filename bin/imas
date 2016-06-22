@@ -52,9 +52,22 @@ function imasgrep(){
     TMP_DIR=$(mktemp -d)
     FILE_NAME=${FILE##*/}
  #   echo "FILE_NAME" $FILE_NAME  # debug
-    cp  $FILE $TMP_DIR/$FILE_NAME.swp
-    cd $TMP_DIR
 
+    # standard-in 
+	if [ -p /dev/stdin ] && [ $FLAG_f -eq "1" ]; then     # ファイルの文字に標準入力を加えて処理する
+	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
+	    cat - >> $TMP_DIR/$FILE_NAME.swp
+	elif [ -p /dev/stdin ] && [ $FLAG_f -eq "0" ] ;then   # 標準出力のみ
+	    cat - >> $TMP_DIR/$FILE_NAME.swp
+	#elif [ -p /dev/stdin ] && [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
+	elif [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
+	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
+        else 
+            echo "Please Option \"[-f FILENAME]\" "   
+            exit 1 
+	fi 
+
+    cd $TMP_DIR
     if [ $FLAG_n -eq "1" ] ;then
 
         ## 対象アイドルのidol_id を取得する
@@ -64,9 +77,8 @@ function imasgrep(){
                 if [ "${GIRLS_NAME_LIST[$i]}" = "${NAME}" ] ; then
                     j=$(expr $i + 1)
                     ## YMLをパース処理したものを利用して、対象アイドルの情報取得
-                    NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
-                    COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
-
+                    #NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
+                    #IDOL_COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)   	#[31m天海春香[m
 		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
                 fi
         done
@@ -77,9 +89,9 @@ function imasgrep(){
                    #j=$(expr $i + 1)
                     ## YMLをパース処理したものを利用して、対象アイドルの情報取得
                     #NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
-                    #COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
+                    #IDOL_COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
 
-                    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
+                    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[32m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
         done  
     fi
    
@@ -129,8 +141,8 @@ function imasgirls(){
 
         ## 対象アイドルのidol_id を取得する
         for i in `seq 0 $GIRLS_ALL_NUM`;do 
-##            j=$(expr $i + 1); echo "idol_id:"$j"=" ${GIRLS_NAME_LIST[$i]}  ; j=$(expr $i - 1) #debug
-##            echo "NAME =" ${NAME} #debug
+#            j=$(expr $i + 1); echo "idol_id:"$j"=" ${GIRLS_NAME_LIST[$i]}  ; j=$(expr $i - 1) #debug
+#            echo "NAME =" ${NAME} #debug
         	if [ "${GIRLS_NAME_LIST[$i]}" = "${NAME}" ] ; then
 		    i=$(expr $i + 1)
             	    ## YMLをパース処理したものを利用して、対象アイドルの情報取得
@@ -152,13 +164,13 @@ function imasgirls(){
 
 ## USAGE ###
 usage_exit() {
-        echo "Usage: $0 item  [-P] [-m] [-s] [-n] " 1>&2
-        echo " item list----------------------"
-        echo "    cat            : [DONT]"
-        echo "    grep [-n]      : [DONT]idol grep"
-        echo "    echo [-P] [-m] : Ano Serifu"
-        echo "    call           : [DONT]call and respons messages"
-        echo "    girls [-n]     : call and respons messages"
+        echo "Usage: $0 ITEM  [OPTION] " 1>&2
+        echo " ITEM list----------------------"
+        echo "    cat                            : [DONT]"
+        echo "    grep [-n PATERN] [-f PATERN]   : [DONT]idol grep"
+        echo "    echo [-P PATERN] [-m PATERN]   : Ano Serifu"
+        echo "    call                           : [DONT]call and respons messages"
+        echo "    girls [-n PATERN]              : call and respons messages"
  #       echo "grep -f 'filename' : idol grep"
  #       echo "echo -P 'producer' -m  'message' : "
  #       echo "call -s 'song': "
