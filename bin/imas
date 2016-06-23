@@ -55,12 +55,22 @@ function imasgrep(){
 
     # standard-in 
 	if [ -p /dev/stdin ] && [ $FLAG_f -eq "1" ]; then     # ファイルの文字に標準入力を加えて処理する
-	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
-	    cat - >> $TMP_DIR/$FILE_NAME.swp
+            if [ -f ${FILE} ] ;then
+	        cp  $FILE $TMP_DIR/$FILE_NAME.swp
+            else 
+	        cat - >> $TMP_DIR/$FILE_NAME.swp
+                echo "===================================================="
+                echo "Please Option \"[-f FILENAME]\" "   
+                echo "Not Found " $FILE
+                echo "====================================================" 
+            fi 
 	elif [ -p /dev/stdin ] && [ $FLAG_f -eq "0" ] ;then   # 標準出力のみ
 	    cat - > $TMP_DIR/$FILE_NAME.swp
 	#elif [ -p /dev/stdin ] && [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
 	elif [ $FLAG_f -eq "1" ] ;then   # ファイルのみ
+           [ -f ${FILE} ] || echo "Please Option \"[-f FILENAME]\" "   
+           [ -f ${FILE} ] || echo "Not Found " $FILE 
+           [ -f ${FILE} ] || exit 1
 	    cp  $FILE $TMP_DIR/$FILE_NAME.swp
         else 
             echo "Please Option \"[-f FILENAME]\" "   
@@ -79,7 +89,7 @@ function imasgrep(){
                     ## YMLをパース処理したものを利用して、対象アイドルの情報取得
                     #NAME_ID=$(parse_yaml $IDOL_YML  |grep idol_id|grep \"$j\" |cut -d"_" -f1)
                     #IDOL_COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)   	#[31m天海春香[m
-		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[31m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
+		    sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[32m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
                 fi
         done
 
@@ -92,6 +102,7 @@ function imasgrep(){
                     #IDOL_COLOR=$(parse_yaml $IDOL_YML  |grep ${NAME_ID} |grep color |cut -d"\"" -f2)
 
                     sed -i -e "s/${GIRLS_NAME_LIST[i]}/\\\e[32m${GIRLS_NAME_LIST[i]}\\\e[m/g"  $FILE_NAME.swp
+                   # sed -i -e "s/${NAME}/\\\e[32m${NAME}\\\e[m/g"  $FILE_NAME.swp
         done  
     fi
    
@@ -269,8 +280,6 @@ test -d $RBMAS_PATH || firstdownload
         echo "Do not Release"
 
     elif [ $FLAG_GREP -eq "1" ] ; then
-       [ -f ${FILE} ] || echo "Not Found " $FILE 
-       [ -f ${FILE} ] || exit 1
 	imasgrep
 
     elif [ $FLAG_ECHO -eq "1" ] ; then 
